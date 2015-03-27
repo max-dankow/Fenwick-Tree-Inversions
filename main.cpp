@@ -1,5 +1,9 @@
 #include <iostream>
 #include <vector>
+#include <algorithm>
+#include <random>
+
+const int TEST_NUMBER = 200;
 
 class My_Fenwick_Tree
 {
@@ -50,14 +54,14 @@ size_t My_Fenwick_Tree::sum(const std::ptrdiff_t first, const std::ptrdiff_t sec
     return sum (second) - sum (first - 1);
 }
 
-int get_inversion_count(const std::vector<int> data)
+int get_inversion_count(const std::vector<int> &data)
 {
     int count = 0;
+
     My_Fenwick_Tree fenwick(data.size());
 
     for (size_t i = 0; i < data.size(); ++i)
     {
-
         count += fenwick.sum(data[i] + 1, data.size() - 1);
         fenwick.update(data[i], 1);
     }
@@ -65,21 +69,69 @@ int get_inversion_count(const std::vector<int> data)
     return count;
 }
 
-int main()
+int simple_solition(const std::vector<int> &data)
 {
-    std::ios_base::sync_with_stdio(false);
+    int inversion_count = 0;
 
-    size_t n;
-    std::cin >> n;
-    std::vector<int> numbers;
-    for (size_t i = 0; i < n; ++i)
+    for (int i = 0; i < data.size(); ++i)
     {
-        int input_value;
-        std::cin >> input_value;
-        numbers.push_back(input_value);
+        for (int j = i + 1; j < data.size(); ++j)
+        {
+            if (data[i] > data[j])
+                ++inversion_count;
+        }
     }
 
-    std::cout << get_inversion_count(numbers) << '\n';
+    return inversion_count;
+}
 
+std::default_random_engine generator;
+
+std::vector<int> generate_permutation(size_t size)
+{
+    std::vector<int> permutation;
+
+    for (size_t i = 0; i < size; ++i)
+        permutation.push_back(i);
+
+    for (size_t i = 0; i < size; ++i)
+    {
+        std::uniform_int_distribution<size_t> random_index(0, size - 1);
+        size_t j = random_index(generator);
+        std::swap(permutation[i], permutation[j]);
+    }
+
+    return permutation;
+}
+
+void test_solution()
+{
+    for (int i = 0; i < TEST_NUMBER; ++i)
+    {
+        std::uniform_int_distribution<size_t> random_size(0, 1000);
+        std::vector<int> test_data = generate_permutation(random_size(generator));
+
+        int simple = simple_solition(test_data);
+        int fenwick = get_inversion_count(test_data);
+
+        std::cout << simple << ' ' << fenwick;
+
+        if (simple == fenwick)
+        {
+            std::cout << " OK\n";
+        }
+        else
+        {
+            std::cout << "\nFAILED.\n";
+            exit(-1);
+        }
+    }
+
+    std::cout << "\nTests OK.\n";
+}
+
+int main()
+{
+    test_solution();
     return 0;
 }
